@@ -2,11 +2,20 @@ package com.careandcure.cac.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "appointment")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Appointment {
 
     @Id
@@ -30,69 +39,6 @@ public class Appointment {
     private String reasonOfCancellation;
 
 
-    public int getAppointmentId() {
-        return appointmentId;
-    }
-
-    public void setAppointmentId(int appointmentId) {
-        this.appointmentId = appointmentId;
-    }
-
-    public Patient getPatient() {
-        return patient;
-    }
-
-    public void setPatient(Patient patient) {
-        this.patient = patient;
-    }
-
-    public Doctor getDoctor() {
-        return doctor;
-    }
-
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
-    }
-
-    public LocalDate getAppointmentDate() {
-        return appointmentDate;
-    }
-
-    public void setAppointmentDate(LocalDate appointmentDate) {
-        this.appointmentDate = appointmentDate;
-    }
-
-    public LocalTime getAppointmentTime() {
-        return appointmentTime;
-    }
-
-    public void setAppointmentTime(LocalTime appointmentTime) {
-        this.appointmentTime = appointmentTime;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
-
-    public String getReasonOfCancellation() {
-        return reasonOfCancellation;
-    }
-
-    public void setReasonOfCancellation(String reasonOfCancellation) {
-        this.reasonOfCancellation = reasonOfCancellation;
-    }
 }
 
 

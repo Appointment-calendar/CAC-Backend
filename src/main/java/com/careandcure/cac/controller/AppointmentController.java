@@ -31,15 +31,7 @@ public class AppointmentController {
     @Autowired
     private DoctorService doctorService;
 
-    // Get all appointments for a specific patient
-    // @GetMapping
-    // public ResponseEntity<List<Appointment>> getAppointmentsForPatient(@PathVariable int patientId) {
-    //     List<Appointment> appointments = appointmentService.getAppointmentsForPatient(patientId);
-    //     if (appointments.isEmpty()) {
-    //         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    //     }
-    //     return ResponseEntity.ok(appointments);
-    // }
+
 
     @GetMapping
     public ResponseEntity<List<Appointment>> getAppointmentsByPatientId(@PathVariable int patientId) {
