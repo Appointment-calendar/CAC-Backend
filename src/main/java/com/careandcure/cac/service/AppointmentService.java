@@ -26,116 +26,94 @@ public class AppointmentService {
     @Autowired
     private PatientRepository patientRepository;
 
-    // Get all appointments
-    public List<Appointment> getAllAppointments() {
-        return appointmentRepository.findAll();
-    }
-
-    // Get all appointments for a specific patient by PatientId
-
     public List<Appointment> getAppointmentsByPatientId(int patientId) {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with ID: " + patientId));
         return appointmentRepository.findByPatient(patient);
     }
 
-    // Get appointments for a specific doctor
-    public List<Appointment> getAppointmentsForDoctor(int doctorId) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor with ID " + doctorId + " not found"));
-        return appointmentRepository.findByDoctor(doctor);
-    }
-
-    // Get an appointment by ID
     public Optional<Appointment> getAppointmentById(int appointmentId) {
         return appointmentRepository.findById(appointmentId);
     }
 
-    
-    // Create a new appointment
-    public Appointment createAppointment(Appointment appointment) {
-        // Ensure the time slot is available before saving the appointment
-        boolean isAvailable = isTimeSlotAvailable(
-                appointment.getDoctor().getDoctorId(),
-                appointment.getAppointmentDate(),
-                appointment.getAppointmentTime());
+    public List<Appointment> getAppointmentsForDoctor(int doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
+        return appointmentRepository.findByDoctor(doctor);
+    }
 
-        if (!isAvailable) {
-            throw new RuntimeException("The selected time slot is already booked. Please choose another time.");
+    public Appointment createAppointment(int patientId, Appointment appointment) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found with ID: " + patientId));
+
+        Doctor doctor = doctorRepository.findById(appointment.getDoctorId())
+                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + appointment.getDoctorId()));
+
+        if (!isTimeSlotAvailable(doctor.getDoctorId(), appointment.getAppointmentDate(), appointment.getAppointmentTime())) {
+            throw new RuntimeException("The selected time slot is already booked.");
         }
 
-        // Save the appointment if the time slot is available
+        appointment.setPatient(patient);
+        appointment.setDoctor(doctor);
         return appointmentRepository.save(appointment);
     }
 
-    // Update an existing appointment
-    public Appointment updateAppointment(Appointment appointment) {
-        // Ensure that the appointment exists
-        if (!appointmentRepository.existsById(appointment.getAppointmentId())) {
-            throw new RuntimeException("Appointment with ID " + appointment.getAppointmentId() + " not found");
-        }
+    public Appointment updateAppointment(int id, Appointment updatedAppointment) {
+        Appointment existingAppointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment with ID " + id + " not found"));
 
-        // Optionally validate time slot availability during update
-        boolean isAvailable = isTimeSlotAvailable(
-                appointment.getDoctor().getDoctorId(),
-                appointment.getAppointmentDate(),
-                appointment.getAppointmentTime());
+        // Update fields
+        existingAppointment.setAppointmentDate(updatedAppointment.getAppointmentDate());
+        existingAppointment.setAppointmentTime(updatedAppointment.getAppointmentTime());
+        existingAppointment.setStatus(updatedAppointment.getStatus());
+        existingAppointment.setReason(updatedAppointment.getReason());
 
-        if (!isAvailable) {
-            throw new RuntimeException("The selected time slot is already booked. Please choose another time.");
+        // Fetch and set the doctor if doctorId is provided
+        if (updatedAppointment.getDoctorId() != 0) {
+            Doctor doctor = doctorRepository.findById(updatedAppointment.getDoctorId())
+                    .orElseThrow(() -> new IllegalArgumentException("Doctor with ID " + updatedAppointment.getDoctorId() + " not found"));
+            existingAppointment.setDoctor(doctor);
         }
 
         // Save the updated appointment
-        return appointmentRepository.save(appointment);
+        return appointmentRepository.save(existingAppointment);
     }
 
-
-
-    // Check if a time slot is available for a given doctor, date, and time
-    public boolean isTimeSlotAvailable(int doctorId, LocalDate appointmentDate, LocalTime appointmentTime) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor with ID " + doctorId + " not found"));
-
-        // Check if there is any appointment already booked for the same doctor, date,
-        // and time
-        return !appointmentRepository.existsByDoctorAndAppointmentDateAndAppointmentTime(doctor, appointmentDate,
-                appointmentTime);
-    }
-
-
-    // Cancel an appointment by ID
-    public void cancelAppointment(int appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment with ID " + appointmentId + " not found"));
-
-        // Set the status to 'Cancelled' and save the appointment
-        appointment.setStatus("Cancelled");
-        appointmentRepository.save(appointment);
-    }
-
-    // Delete an appointment by ID
-    public void deleteAppointmentById(int appointmentId) {
-        if (!appointmentRepository.existsById(appointmentId)) {
-            throw new RuntimeException("Appointment with ID " + appointmentId + " not found");
-        }
-        appointmentRepository.deleteById(appointmentId);
-    }
-
-    // Cancel an appointment by ID with a reason
-    public void cancelAppointment(int appointmentId, String reason) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment with ID " + appointmentId + " not found"));
+    public void cancelAppointment(int id, String reason) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + id));
 
         appointment.setStatus("Cancelled");
         appointment.setReasonOfCancellation(reason);
         appointmentRepository.save(appointment);
     }
 
-    // // Get all appointments for a specific patient
-    public List<Appointment> getAppointmentsForPatient(int patientId) {
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient with ID " + patientId + " not found"));
-        return appointmentRepository.findByPatient(patient);
+    public void deleteAppointmentById(int id) {
+        if (!appointmentRepository.existsById(id)) {
+            throw new RuntimeException("Appointment not found with ID: " + id);
+        }
+        appointmentRepository.deleteById(id);
     }
+
+    public boolean checkTimeSlotAvailability(int doctorId, String date, String time) {
+        time = time.trim();
+        LocalDate appointmentDate = LocalDate.parse(date);
+        LocalTime appointmentTime = LocalTime.parse(time);
+
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
+
+        return !appointmentRepository.existsByDoctorAndAppointmentDateAndAppointmentTime(doctor, appointmentDate, appointmentTime);
+    }
+    private boolean isTimeSlotAvailable(int doctorId, LocalDate appointmentDate, LocalTime appointmentTime) {
+        // Fetch the doctor entity from the database
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
+
+        // Check if an appointment exists for the given doctor, date, and time
+        return !appointmentRepository.existsByDoctorAndAppointmentDateAndAppointmentTime(doctor, appointmentDate, appointmentTime);
+    }
+
+
 
 }

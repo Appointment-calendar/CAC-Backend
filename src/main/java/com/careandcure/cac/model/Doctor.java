@@ -1,22 +1,20 @@
 package com.careandcure.cac.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 @Entity
+@Table(name = "doctor")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "doctor")
 public class Doctor {
 
     @Id
@@ -56,10 +54,8 @@ public class Doctor {
     @Column(name = "availability_slot")
     private Map<String, List<String>> availability;
 
-    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference // Managed side of the relationship with Appointments
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    @JsonBackReference
+    @JsonIgnore
     private List<Appointment> appointments;
-
-
-    }
-
+}
