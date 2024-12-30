@@ -56,6 +56,10 @@ public class Patient {
 //    @JsonBackReference
     @JsonIgnore
     private List<Appointment> appointments;
+
+    public String getEmail() {
+        return this.emailId;
+    }
 }
 
 

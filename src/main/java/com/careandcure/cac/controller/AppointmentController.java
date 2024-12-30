@@ -8,6 +8,7 @@ import com.careandcure.cac.service.AppointmentService;
 import com.careandcure.cac.service.PatientService;
 import com.careandcure.cac.service.DoctorService;
 
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -63,7 +63,7 @@ public class AppointmentController {
 
     // Create a new appointment
     @PostMapping(value = "/schedule", consumes = "application/json", produces = "application/json")
-public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody Appointment appointment) {
+public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody Appointment appointment) throws MessagingException {
     Patient patient = patientService.getPatientById(patientId)
             .orElseThrow(() -> new IllegalArgumentException("Patient with ID " + patientId + " not found"));
 
@@ -102,7 +102,7 @@ public ResponseEntity<Appointment> getAppointmentById(@PathVariable int patientI
    // Update an appointment
 @PutMapping("/{id}")
 public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVariable int id,
-                                           @RequestBody Appointment updatedAppointment) {
+                                           @RequestBody Appointment updatedAppointment) throws MessagingException {
     Patient patient = patientService.getPatientById(patientId)
             .orElseThrow(() -> new IllegalArgumentException("Patient with ID " + patientId + " not found"));
 
@@ -140,7 +140,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
     @PostMapping("/cancel")
     public ResponseEntity<?> cancelAppointment(
             @PathVariable int patientId,
-            @RequestBody CancelAppointmentRequest request) {
+            @RequestBody CancelAppointmentRequest request) throws MessagingException {
         // Validate the appointment exists
         Appointment appointment = appointmentService.getAppointmentById(request.getAppointmentId())
                 .orElseThrow(() -> new ResponseStatusException(

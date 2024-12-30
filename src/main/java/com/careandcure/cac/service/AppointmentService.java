@@ -6,6 +6,7 @@ import com.careandcure.cac.model.Patient;
 import com.careandcure.cac.repository.AppointmentRepository;
 import com.careandcure.cac.repository.DoctorRepository;
 import com.careandcure.cac.repository.PatientRepository;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,13 +27,15 @@ public class AppointmentService {
     @Autowired
     private PatientRepository patientRepository;
 
+    @Autowired
+    private EmailService emailService;  // Inject EmailService
+
     // Get all appointments
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
 
     // Get all appointments for a specific patient by PatientId
-
     public List<Appointment> getAppointmentsByPatientId(int patientId) {
         Patient patient = patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found with ID: " + patientId));
@@ -51,9 +54,8 @@ public class AppointmentService {
         return appointmentRepository.findById(appointmentId);
     }
 
-    
     // Create a new appointment
-    public Appointment createAppointment(Appointment appointment) {
+    public Appointment createAppointment(Appointment appointment) throws MessagingException {
         // Ensure the time slot is available before saving the appointment
         boolean isAvailable = isTimeSlotAvailable(
                 appointment.getDoctor().getDoctorId(),
@@ -64,12 +66,17 @@ public class AppointmentService {
             throw new RuntimeException("The selected time slot is already booked. Please choose another time.");
         }
 
-        // Save the appointment if the time slot is available
-        return appointmentRepository.save(appointment);
+        // Save the appointment
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        // Send confirmation email
+        sendAppointmentConfirmationEmail(savedAppointment);
+
+        return savedAppointment;
     }
 
     // Update an existing appointment
-    public Appointment updateAppointment(Appointment appointment) {
+    public Appointment updateAppointment(Appointment appointment) throws MessagingException {
         // Ensure that the appointment exists
         if (!appointmentRepository.existsById(appointment.getAppointmentId())) {
             throw new RuntimeException("Appointment with ID " + appointment.getAppointmentId() + " not found");
@@ -86,10 +93,13 @@ public class AppointmentService {
         }
 
         // Save the updated appointment
-        return appointmentRepository.save(appointment);
+        Appointment updatedAppointment = appointmentRepository.save(appointment);
+
+        // Send updated appointment confirmation email
+        sendAppointmentConfirmationEmail(updatedAppointment);
+
+        return updatedAppointment;
     }
-
-
 
     // Check if a time slot is available for a given doctor, date, and time
     public boolean isTimeSlotAvailable(int doctorId, LocalDate appointmentDate, LocalTime appointmentTime) {
@@ -102,15 +112,17 @@ public class AppointmentService {
                 appointmentTime);
     }
 
-
     // Cancel an appointment by ID
-    public void cancelAppointment(int appointmentId) {
+    public void cancelAppointment(int appointmentId, String reason) throws MessagingException {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment with ID " + appointmentId + " not found"));
 
-        // Set the status to 'Cancelled' and save the appointment
         appointment.setStatus("Cancelled");
+        appointment.setReasonOfCancellation(reason);
         appointmentRepository.save(appointment);
+
+        // Send cancellation email
+        sendAppointmentCancellationEmail(appointment);
     }
 
     // Delete an appointment by ID
@@ -121,21 +133,26 @@ public class AppointmentService {
         appointmentRepository.deleteById(appointmentId);
     }
 
-    // Cancel an appointment by ID with a reason
-    public void cancelAppointment(int appointmentId, String reason) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment with ID " + appointmentId + " not found"));
+    // Call EmailService to send confirmation email
+    private void sendAppointmentConfirmationEmail(Appointment appointment) throws MessagingException {
+        String patientEmail = appointment.getPatient().getEmail();
+        String patientName = appointment.getPatient().getName();
+        String doctorName = appointment.getDoctor().getName();
+        String appointmentDate = appointment.getAppointmentDate().toString();
+        String appointmentTime = appointment.getAppointmentTime().toString();
 
-        appointment.setStatus("Cancelled");
-        appointment.setReasonOfCancellation(reason);
-        appointmentRepository.save(appointment);
+        emailService.sendAppointmentConfirmationEmail(patientEmail, patientName, doctorName, appointmentDate, appointmentTime);
     }
 
-    // // Get all appointments for a specific patient
-    public List<Appointment> getAppointmentsForPatient(int patientId) {
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("Patient with ID " + patientId + " not found"));
-        return appointmentRepository.findByPatient(patient);
-    }
+    // Call EmailService to send cancellation email
+    private void sendAppointmentCancellationEmail(Appointment appointment) throws MessagingException {
+        String patientEmail = appointment.getPatient().getEmail();
+        String patientName = appointment.getPatient().getName();
+        String doctorName = appointment.getDoctor().getName();
+        String appointmentDate = appointment.getAppointmentDate().toString();
+        String appointmentTime = appointment.getAppointmentTime().toString();
+        String reason = appointment.getReasonOfCancellation();
 
+        emailService.sendAppointmentCancellationEmail(patientEmail, patientName, doctorName, appointmentDate, appointmentTime, reason);
+    }
 }
