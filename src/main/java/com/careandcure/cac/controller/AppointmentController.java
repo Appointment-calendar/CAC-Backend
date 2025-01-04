@@ -1,6 +1,7 @@
 package com.careandcure.cac.controller;
 
 import com.careandcure.cac.dto.CancelAppointmentRequest;
+import com.careandcure.cac.dto.RescheduleRequest;
 import com.careandcure.cac.model.Appointment;
 import com.careandcure.cac.model.Patient;
 import com.careandcure.cac.model.Doctor;
@@ -43,13 +44,7 @@ public class AppointmentController {
                 : ResponseEntity.ok(appointments);
     }
 
-    // Get an appointment by ID
-    // @GetMapping("/{id}")
-    // public ResponseEntity<Appointment> getAppointmentById(@PathVariable int patientId, @PathVariable int id) {
-    //     Optional<Appointment> appointment = appointmentService.getAppointmentById(id);
-    //     return appointment.map(ResponseEntity::ok)
-    //             .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
-    // }
+
 
     // Get appointments for a specific doctor
     @GetMapping("/doctor/{doctorId}")
@@ -81,10 +76,11 @@ public ResponseEntity<?> createAppointment(@PathVariable int patientId, @Request
     }
 
     appointment.setPatient(patient);
+    appointment.setStatus("Scheduled");
     appointment.setDoctor(doctor);
-
+    appointment.setDoctorName(doctor.getName());
     Appointment savedAppointment = appointmentService.createAppointment(appointment);
-
+     System.out.println(savedAppointment.getStatus());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedAppointment);
 }
 
@@ -95,7 +91,7 @@ public ResponseEntity<Appointment> getAppointmentById(@PathVariable int patientI
             .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
 }
 
-    
+
 
 
     // Update an appointment
@@ -179,6 +175,21 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
         LocalTime appointmentTime = LocalTime.parse(time);
         boolean isAvailable = appointmentService.isTimeSlotAvailable(doctorId, appointmentDate, appointmentTime);
         return ResponseEntity.ok(isAvailable);
+    }
+    @PutMapping("/reschedule/{appointmentId}")
+    public ResponseEntity<?> rescheduleAppointment(
+            @PathVariable int appointmentId,
+            @RequestBody RescheduleRequest rescheduleRequest) throws MessagingException {
+
+        // Parse the new date and time from the request
+        LocalDate rescheduleDate = LocalDate.parse(rescheduleRequest.getNewDate());
+        LocalTime rescheduleTime = LocalTime.parse(rescheduleRequest.getNewTime());
+
+        // Reschedule the appointment
+        Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleTime);
+
+        // Return the updated appointment
+        return ResponseEntity.ok(updatedAppointment);
     }
 }
 

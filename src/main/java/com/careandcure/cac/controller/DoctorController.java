@@ -27,6 +27,7 @@ public class DoctorController {
         return ResponseEntity.ok(doctors);
     }
 
+
     // Get all doctors
     // @GetMapping
     // public ResponseEntity<List<DoctorModel>> getAllDoctors() {
