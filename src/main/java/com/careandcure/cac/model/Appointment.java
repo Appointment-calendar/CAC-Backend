@@ -3,6 +3,7 @@ package com.careandcure.cac.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -21,7 +22,7 @@ public class Appointment {
 
   private LocalDate appointmentDate;
   private LocalTime appointmentTime;
-  private String status;
+  private String status="Scheduled";
   private String reason;
   private String reasonOfCancellation;
 
@@ -36,6 +37,27 @@ public class Appointment {
   private Doctor doctor;
 
   @Transient
-  private Integer doctorId; // Change from int to Integer to allow null values
+  private String doctorName;
+
+  @Transient
+  private Integer doctorId;
+  @Transient
+  private String doctorPhoneNumber;
+  @Transient
+  private String specialty;
+
+  @PostLoad
+  public void setDoctorNameAndId() {
+    if (doctor != null) {
+      this.doctorPhoneNumber=doctor.getContactNumber();
+      this.specialty=doctor.getSpecialty();
+      this.doctorName = doctor.getName();  // Assuming Doctor entity has getName()
+      this.doctorId = doctor.getDoctorId();  // Assuming Doctor entity has getId()
+    }
+  }
+  public  void  setMyStatues(String s){
+    this.status=s;
+  }
+
 }
 

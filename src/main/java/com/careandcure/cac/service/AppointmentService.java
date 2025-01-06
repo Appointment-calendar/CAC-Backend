@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,7 +31,7 @@ public class AppointmentService {
     private PatientRepository patientRepository;
 
     @Autowired
-    private EmailService emailService;  // Inject EmailService
+    private EmailService emailService;
 
     // Get all appointments
     public List<Appointment> getAllAppointments() {
@@ -68,13 +69,12 @@ public class AppointmentService {
             throw new RuntimeException("The selected time slot is already booked. Please choose another time.");
         }
 
-        // Save the appointment
-        Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        // Send confirmation email
-        sendAppointmentConfirmationEmail(savedAppointment);
 
-        return savedAppointment;
+        appointment.setStatus("Scheduled");  // Ensure the status is set correctly.
+         // Clear any cancellation reason
+        return  appointmentRepository.save(appointment);
+
     }
 
     // Update an existing appointment
