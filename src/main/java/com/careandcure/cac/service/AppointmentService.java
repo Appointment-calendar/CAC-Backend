@@ -7,6 +7,8 @@ import com.careandcure.cac.repository.AppointmentRepository;
 import com.careandcure.cac.repository.DoctorRepository;
 import com.careandcure.cac.repository.PatientRepository;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
