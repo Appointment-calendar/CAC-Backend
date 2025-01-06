@@ -1,6 +1,7 @@
 package com.careandcure.cac.controller;
 
 import com.careandcure.cac.dto.CancelAppointmentRequest;
+import com.careandcure.cac.dto.RescheduleDTO;
 import com.careandcure.cac.model.Appointment;
 import com.careandcure.cac.model.Patient;
 import com.careandcure.cac.model.Doctor;
@@ -60,7 +61,7 @@ public class AppointmentController {
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.ok(appointments);
     }
-
+ 
     // Create a new appointment
     @PostMapping(value = "/schedule", consumes = "application/json", produces = "application/json")
 public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody Appointment appointment) throws MessagingException {
@@ -179,6 +180,23 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
         LocalTime appointmentTime = LocalTime.parse(time);
         boolean isAvailable = appointmentService.isTimeSlotAvailable(doctorId, appointmentDate, appointmentTime);
         return ResponseEntity.ok(isAvailable);
+    }
+
+
+    @PutMapping("/reschedule/{appointmentId}")
+    public ResponseEntity<?> rescheduleAppointment(
+            @PathVariable int appointmentId,
+            @RequestBody RescheduleDTO rescheduleRequest) throws MessagingException {
+
+        // Parse the new date and time from the request
+        LocalDate rescheduleDate = LocalDate.parse(rescheduleRequest.getNewDate());
+        LocalTime rescheduleTime = LocalTime.parse(rescheduleRequest.getNewTime());
+
+        // Reschedule the appointment
+        Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleTime);
+
+        // Return the updated appointment
+        return ResponseEntity.ok(updatedAppointment);
     }
 }
 

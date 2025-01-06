@@ -7,6 +7,8 @@ import com.careandcure.cac.repository.AppointmentRepository;
 import com.careandcure.cac.repository.DoctorRepository;
 import com.careandcure.cac.repository.PatientRepository;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -154,5 +156,36 @@ public class AppointmentService {
         String reason = appointment.getReasonOfCancellation();
 
         emailService.sendAppointmentCancellationEmail(patientEmail, patientName, doctorName, appointmentDate, appointmentTime, reason);
+    }
+
+    @Transactional
+    public Appointment rescheduleAppointment(int appointmentId, LocalDate newDate, LocalTime newTime) throws MessagingException {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment with ID " + appointmentId + " not found"));
+
+        boolean isAvailable = isTimeSlotAvailable(appointment.getDoctor().getDoctorId(), newDate, newTime);
+        if (!isAvailable) {
+            throw new RuntimeException("The selected time slot is already booked. Please choose another time.");
+        }
+
+        // Set status correctly before saving the appointment
+        appointment.setAppointmentDate(newDate);
+        appointment.setAppointmentTime(newTime);
+        appointment.setStatus("Scheduled");  // Ensure the status is set correctly.
+        appointment.setReasonOfCancellation(null);  // Clear any cancellation reason
+        Appointment updatedAppointment = appointmentRepository.save(appointment);
+
+        sendAppointmentRescheduleEmail(updatedAppointment);
+        return updatedAppointment;
+    }
+
+    private void sendAppointmentRescheduleEmail(Appointment appointment) throws MessagingException {
+        String patientEmail = appointment.getPatient().getEmail();
+        String patientName = appointment.getPatient().getName();
+        String doctorName = appointment.getDoctor().getName();
+        String appointmentDate = appointment.getAppointmentDate().toString();
+        String appointmentTime = appointment.getAppointmentTime().toString();
+
+        emailService.sendAppointmentRescheduleEmail(patientEmail, patientName, doctorName, appointmentDate, appointmentTime);
     }
 }
