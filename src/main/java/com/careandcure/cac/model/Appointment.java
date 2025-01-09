@@ -1,10 +1,12 @@
 package com.careandcure.cac.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.*;
 
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -20,10 +22,18 @@ public class Appointment {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int appointmentId;
 
+  @NotNull(message = "Appointment date cannot be null")
+  @FutureOrPresent(message = "Appointment date must be today or in the future")
   private LocalDate appointmentDate;
+
+  @NotNull(message = "Appointment time cannot be null")
   private LocalTime appointmentTime;
+
+  @NotEmpty(message = "Status cannot be empty")
   private String status;
+
   private String reason;
+
   private String reasonOfCancellation;
 
   @ManyToOne(fetch = FetchType.EAGER)
@@ -39,4 +49,3 @@ public class Appointment {
   @Transient
   private int doctorId; // Temporary field for deserialization
 }
-

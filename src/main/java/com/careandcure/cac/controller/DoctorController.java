@@ -1,10 +1,14 @@
 package com.careandcure.cac.controller;
+
 import com.careandcure.cac.dto.DoctorDTO;
 import com.careandcure.cac.model.Doctor;
 import com.careandcure.cac.service.DoctorService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -22,17 +26,10 @@ public class DoctorController {
     @GetMapping
     public ResponseEntity<List<DoctorDTO>> getDoctors() {
         List<DoctorDTO> doctors = doctorService.findAll().stream()
-            .map(doctor -> new DoctorDTO(doctor.getDoctorId(), doctor.getName()))
-            .collect(Collectors.toList());
+                .map(doctor -> new DoctorDTO(doctor.getDoctorId(), doctor.getName()))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(doctors);
     }
-
-    // Get all doctors
-    // @GetMapping
-    // public ResponseEntity<List<DoctorModel>> getAllDoctors() {
-    //     List<DoctorModel> doctors = doctorService.getAllDoctors();
-    //     return ResponseEntity.ok(doctors);
-    // }
 
     // Get a doctor by ID
     @GetMapping("/{doctorId}")
@@ -44,19 +41,26 @@ public class DoctorController {
         return ResponseEntity.notFound().build();
     }
 
-    // Add a new doctor
+    // Add a new doctor with validation
     @PostMapping
-    public ResponseEntity<Doctor> createDoctor(@RequestBody Doctor doctor) {
+    public ResponseEntity<?> createDoctor(@Valid @RequestBody Doctor doctor, BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
         Doctor createdDoctor = doctorService.createDoctor(doctor);
         return ResponseEntity.ok(createdDoctor);
     }
 
-    // Update doctor details
+    // Update doctor details with validation
     @PutMapping("/{doctorId}")
-    public ResponseEntity<Doctor> updateDoctor(
+    public ResponseEntity<?> updateDoctor(
             @PathVariable int doctorId,
-            @RequestBody Doctor doctor) {
-        // Ensure the doctor ID matches the path variable
+            @Valid @RequestBody Doctor doctor,
+            BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
+
         doctor.setDoctorId(doctorId);
 
         try {
