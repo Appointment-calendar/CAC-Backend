@@ -1,6 +1,7 @@
 package com.careandcure.cac.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.Size;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,10 +24,13 @@ public class Appointment {
   private LocalDate appointmentDate;
   private LocalTime appointmentTime;
   private String status="Scheduled";
+  @Size(min = 10, message = "Reason must be at least 10 characters long")
   private String reason;
+  
+  @Size(min = 10, message = "Reason of cancellation must be at least 10 characters long")
   private String reasonOfCancellation;
 
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.EAGER) 
   @JoinColumn(name = "patient_id", nullable = false)
   @JsonIgnore
   private Patient patient;
