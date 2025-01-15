@@ -1,7 +1,9 @@
 package com.careandcure.cac.controller;
 
+import com.careandcure.cac.Exception.ResourceNotFoundException;
 import com.careandcure.cac.dto.CancelAppointmentRequest;
 import com.careandcure.cac.dto.RescheduleDTO;
+// import com.careandcure.cac.dto.RescheduleRequest;
 import com.careandcure.cac.model.Appointment;
 import com.careandcure.cac.model.Patient;
 import com.careandcure.cac.model.Doctor;
@@ -13,6 +15,7 @@ import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,13 +47,7 @@ public class AppointmentController {
                 : ResponseEntity.ok(appointments);
     }
 
-    // Get an appointment by ID
-    // @GetMapping("/{id}")
-    // public ResponseEntity<Appointment> getAppointmentById(@PathVariable int patientId, @PathVariable int id) {
-    //     Optional<Appointment> appointment = appointmentService.getAppointmentById(id);
-    //     return appointment.map(ResponseEntity::ok)
-    //             .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
-    // }
+
 
     // Get appointments for a specific doctor
     @GetMapping("/doctor/{doctorId}")
@@ -61,10 +58,10 @@ public class AppointmentController {
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.ok(appointments);
     }
- 
+
     // Create a new appointment
     @PostMapping(value = "/schedule", consumes = "application/json", produces = "application/json")
-public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody Appointment appointment) throws MessagingException {
+public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody @Validated Appointment appointment) throws ResourceNotFoundException, MessagingException {
     Patient patient = patientService.getPatientById(patientId)
             .orElseThrow(() -> new IllegalArgumentException("Patient with ID " + patientId + " not found"));
 
@@ -81,11 +78,14 @@ public ResponseEntity<?> createAppointment(@PathVariable int patientId, @Request
         return ResponseEntity.badRequest().body("The selected time slot is already booked. Please choose another time.");
     }
 
+
+
     appointment.setPatient(patient);
+    appointment.setStatus("Scheduled");
     appointment.setDoctor(doctor);
-
+    appointment.setDoctorName(doctor.getName());
     Appointment savedAppointment = appointmentService.createAppointment(appointment);
-
+     System.out.println(savedAppointment.getStatus());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedAppointment);
 }
 
@@ -96,7 +96,7 @@ public ResponseEntity<Appointment> getAppointmentById(@PathVariable int patientI
             .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
 }
 
-    
+
 
 
     // Update an appointment
@@ -141,7 +141,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
     @PostMapping("/cancel")
     public ResponseEntity<?> cancelAppointment(
             @PathVariable int patientId,
-            @RequestBody CancelAppointmentRequest request) throws MessagingException {
+            @RequestBody @Validated CancelAppointmentRequest request) throws ResourceNotFoundException, MessagingException {
         // Validate the appointment exists
         Appointment appointment = appointmentService.getAppointmentById(request.getAppointmentId())
                 .orElseThrow(() -> new ResponseStatusException(
@@ -186,11 +186,26 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
     @PutMapping("/reschedule/{appointmentId}")
     public ResponseEntity<?> rescheduleAppointment(
             @PathVariable int appointmentId,
-            @RequestBody RescheduleDTO rescheduleRequest) throws MessagingException {
+            @RequestBody RescheduleDTO rescheduleRequest) throws MessagingException, ResourceNotFoundException {
 
         // Parse the new date and time from the request
         LocalDate rescheduleDate = LocalDate.parse(rescheduleRequest.getNewDate());
         LocalTime rescheduleTime = LocalTime.parse(rescheduleRequest.getNewTime());
+
+        Appointment appointment = appointmentService.getAppointmentById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Appointment with ID " + appointmentId + " not found."));
+
+            boolean isAvailable = appointmentService.isTimeSlotAvailable(appointment.getDoctor().getDoctorId(),
+                    rescheduleDate, rescheduleTime);
+                if (!isAvailable) {
+                    return ResponseEntity.badRequest().body("The selected time slot is already booked. Please choose another time.");
+                }
+            
+        if(rescheduleDate.isBefore(LocalDate.now())) { 
+            return ResponseEntity.badRequest().body("Appointment date cannot be in the past.");
+        }
 
         // Reschedule the appointment
         Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleTime);
@@ -198,6 +213,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
         // Return the updated appointment
         return ResponseEntity.ok(updatedAppointment);
     }
+    
 }
 
 
