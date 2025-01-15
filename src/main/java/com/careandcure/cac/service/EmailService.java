@@ -53,8 +53,9 @@ public class EmailService {
             e.printStackTrace();
             throw new RuntimeException("Failed to send email");
         }
-
     }
+
+
     public void sendAppointmentRescheduleEmail(String patientEmail, String patientName, String doctorName, String appointmentDate, String appointmentTime) throws MessagingException {
         String subject = "Your Appointment Has Been Rescheduled";
         String message = String.format("Dear %s,\n\nYour appointment with Dr. %s has been rescheduled to %s at %s.\n\nThank you,\nCare and Cure Team",
@@ -62,5 +63,4 @@ public class EmailService {
 
         sendEmail(patientEmail, subject, message);
     }
-
 }
