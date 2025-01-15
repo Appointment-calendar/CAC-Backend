@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import jakarta.validation.constraints.FutureOrPresent;
+
 
 @NoArgsConstructor
 public class RescheduleDTO{
@@ -20,6 +22,8 @@ public class RescheduleDTO{
     public void setNewTime(String newTime) {
         this.newTime = newTime;
     }
+    @FutureOrPresent(message = "Appointment date must be in present or future")
     private  String newDate;
+    @FutureOrPresent(message = "Appointment time must be in present or future")
     private  String newTime;
 }

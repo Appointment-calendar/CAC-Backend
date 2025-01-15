@@ -1,6 +1,8 @@
 package com.careandcure.cac.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Size;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,7 +23,9 @@ public class Appointment {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int appointmentId;
 
+  @FutureOrPresent(message = "Appointment date must be in present or future")
   private LocalDate appointmentDate;
+  @FutureOrPresent(message = "Appointment time must be in present or future")
   private LocalTime appointmentTime;
   private String status="Scheduled";
   @Size(min = 10, message = "Reason must be at least 10 characters long")

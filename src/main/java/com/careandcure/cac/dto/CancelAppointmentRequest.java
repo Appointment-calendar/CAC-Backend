@@ -2,10 +2,12 @@ package com.careandcure.cac.dto;
 
 public class CancelAppointmentRequest {
     private int appointmentId;
+
     private String reasonOfCancellation;
 
     // Constructors
-    public CancelAppointmentRequest() {}
+    public CancelAppointmentRequest() {
+    }
 
     public CancelAppointmentRequest(int appointmentId, String reasonOfCancellation) {
         this.appointmentId = appointmentId;

@@ -1,5 +1,6 @@
 package com.careandcure.cac.controller;
 
+import com.careandcure.cac.Exception.ResourceNotFoundException;
 import com.careandcure.cac.dto.CancelAppointmentRequest;
 import com.careandcure.cac.dto.RescheduleDTO;
 // import com.careandcure.cac.dto.RescheduleRequest;
@@ -60,7 +61,7 @@ public class AppointmentController {
 
     // Create a new appointment
     @PostMapping(value = "/schedule", consumes = "application/json", produces = "application/json")
-public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody @Validated Appointment appointment) throws MessagingException {
+public ResponseEntity<?> createAppointment(@PathVariable int patientId, @RequestBody @Validated Appointment appointment) throws ResourceNotFoundException, MessagingException {
     Patient patient = patientService.getPatientById(patientId)
             .orElseThrow(() -> new IllegalArgumentException("Patient with ID " + patientId + " not found"));
 
@@ -77,9 +78,7 @@ public ResponseEntity<?> createAppointment(@PathVariable int patientId, @Request
         return ResponseEntity.badRequest().body("The selected time slot is already booked. Please choose another time.");
     }
 
-    if(appointment.getAppointmentDate().isBefore(LocalDate.now())) {
-        return ResponseEntity.badRequest().body("Appointment date cannot be in the past.");
-    }
+
 
     appointment.setPatient(patient);
     appointment.setStatus("Scheduled");
@@ -142,7 +141,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
     @PostMapping("/cancel")
     public ResponseEntity<?> cancelAppointment(
             @PathVariable int patientId,
-            @RequestBody CancelAppointmentRequest request) throws MessagingException {
+            @RequestBody @Validated CancelAppointmentRequest request) throws ResourceNotFoundException, MessagingException {
         // Validate the appointment exists
         Appointment appointment = appointmentService.getAppointmentById(request.getAppointmentId())
                 .orElseThrow(() -> new ResponseStatusException(
@@ -187,7 +186,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
     @PutMapping("/reschedule/{appointmentId}")
     public ResponseEntity<?> rescheduleAppointment(
             @PathVariable int appointmentId,
-            @RequestBody RescheduleDTO rescheduleRequest) throws MessagingException {
+            @RequestBody RescheduleDTO rescheduleRequest) throws MessagingException, ResourceNotFoundException {
 
         // Parse the new date and time from the request
         LocalDate rescheduleDate = LocalDate.parse(rescheduleRequest.getNewDate());
@@ -204,9 +203,9 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
                     return ResponseEntity.badRequest().body("The selected time slot is already booked. Please choose another time.");
                 }
             
-                if(appointment.getAppointmentDate().isBefore(LocalDate.now())) {
-                    return ResponseEntity.badRequest().body("Appointment date cannot be in the past.");
-                }
+        if(rescheduleDate.isBefore(LocalDate.now())) { 
+            return ResponseEntity.badRequest().body("Appointment date cannot be in the past.");
+        }
 
         // Reschedule the appointment
         Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleTime);
@@ -214,27 +213,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
         // Return the updated appointment
         return ResponseEntity.ok(updatedAppointment);
     }
-    // @PutMapping("/reschedule/{appointmentId}")
-    // public ResponseEntity<?> rescheduleAppointment(
-    //         @PathVariable int appointmentId,
-    //         @RequestBody RescheduleRequest rescheduleRequest) throws MessagingException {
-
-    //     // Parse the new date and time from the request
-    //     LocalDate rescheduleDate = LocalDate.parse(rescheduleRequest.getNewDate());
-    //     LocalTime rescheduleTime = LocalTime.parse(rescheduleRequest.getNewTime());
-
-    //     if(rescheduleDate.isBefore(LocalDate.now())) {
-    //         return ResponseEntity.badRequest().body("Appointment date cannot be in the past.");
-    //     }
-
-
-
-    //     // Reschedule the appointment
-    //     Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleTime);
-
-    //     // Return the updated appointment
-    //     return ResponseEntity.ok(updatedAppointment);
-    // }
+    
 }
 
 
