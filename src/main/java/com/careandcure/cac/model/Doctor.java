@@ -48,11 +48,14 @@ public class Doctor {
     private Integer yearsOfExperience;
     private Boolean status;
 
-    @ElementCollection
-    @CollectionTable(name = "doctor_availability", joinColumns = @JoinColumn(name = "doctor_id"))
-    @MapKeyColumn(name = "day_of_week")
-    @Column(name = "availability_slot")
-    private Map<String, List<String>> availability;
+//    @ElementCollection
+//    @CollectionTable(name = "doctor_availability", joinColumns = @JoinColumn(name = "doctor_id"))
+//    @MapKeyColumn(name = "day_of_week")
+//    @Column(name = "availability_slot")
+    
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<DoctorAvailability> availability;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    @JsonBackReference

@@ -12,7 +12,7 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -105,11 +105,11 @@ public class AppointmentService {
     }
 
     // Check if a time slot is available
-    public boolean isTimeSlotAvailable(int doctorId, LocalDate appointmentDate, LocalTime appointmentTime) {
+    public boolean isTimeSlotAvailable(int doctorId, LocalDate appointmentDate, String string) {
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new IllegalArgumentException("Doctor with ID " + doctorId + " not found"));
 
-        return !appointmentRepository.existsByDoctorAndAppointmentDateAndAppointmentTime(doctor, appointmentDate, appointmentTime);
+        return !appointmentRepository.existsByDoctorAndAppointmentDateAndAppointmentTime(doctor, appointmentDate, string);
     }
 
     // Cancel an appointment
@@ -136,7 +136,7 @@ public class AppointmentService {
 
     // Reschedule an appointment
     @Transactional
-    public Appointment rescheduleAppointment(int appointmentId, LocalDate newDate, LocalTime newTime) throws ResourceNotFoundException, MessagingException {
+    public Appointment rescheduleAppointment(int appointmentId, LocalDate newDate, String newTime) throws ResourceNotFoundException, MessagingException {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Appointment with ID " + appointmentId + " not found"));
         

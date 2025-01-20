@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -47,7 +48,20 @@ public class AppointmentController {
                 : ResponseEntity.ok(appointments);
     }
 
+ // Endpoint to get available time slots for a doctor on a specific date
+    @GetMapping("/available-time-slots/{doctorId}")
+    public ResponseEntity<Map<String, List<String>>> getAvailableTimeSlots(
+            @PathVariable int doctorId,
+            @RequestParam("appointmentDate") String appointmentDate) {
 
+        // Convert the appointmentDate string to LocalDate
+        LocalDate date = LocalDate.parse(appointmentDate);
+
+        // Get available time slots
+        Map<String, List<String>> availableSlots = doctorService.getAvailableTimeSlots(doctorId, date);
+
+        return ResponseEntity.ok(availableSlots);
+    }
 
     // Get appointments for a specific doctor
     @GetMapping("/doctor/{doctorId}")
@@ -177,8 +191,8 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
                                                               @RequestParam String date,
                                                               @RequestParam String time) {
         LocalDate appointmentDate = LocalDate.parse(date);
-        LocalTime appointmentTime = LocalTime.parse(time);
-        boolean isAvailable = appointmentService.isTimeSlotAvailable(doctorId, appointmentDate, appointmentTime);
+        //LocalTime appointmentTime = LocalTime.parse(time);
+        boolean isAvailable = appointmentService.isTimeSlotAvailable(doctorId, appointmentDate,time);
         return ResponseEntity.ok(isAvailable);
     }
 
@@ -190,7 +204,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
 
         // Parse the new date and time from the request
         LocalDate rescheduleDate = LocalDate.parse(rescheduleRequest.getNewDate());
-        LocalTime rescheduleTime = LocalTime.parse(rescheduleRequest.getNewTime());
+       // LocalTime rescheduleTime = LocalTime.parse(rescheduleRequest.getNewTime());
 
         Appointment appointment = appointmentService.getAppointmentById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -198,7 +212,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
                         "Appointment with ID " + appointmentId + " not found."));
 
             boolean isAvailable = appointmentService.isTimeSlotAvailable(appointment.getDoctor().getDoctorId(),
-                    rescheduleDate, rescheduleTime);
+                    rescheduleDate, rescheduleRequest.getNewTime());
                 if (!isAvailable) {
                     return ResponseEntity.badRequest().body("The selected time slot is already booked. Please choose another time.");
                 }
@@ -208,7 +222,7 @@ public ResponseEntity<?> updateAppointment(@PathVariable int patientId, @PathVar
         }
 
         // Reschedule the appointment
-        Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleTime);
+        Appointment updatedAppointment = appointmentService.rescheduleAppointment(appointmentId, rescheduleDate, rescheduleRequest.getNewTime());
 
         // Return the updated appointment
         return ResponseEntity.ok(updatedAppointment);

@@ -90,7 +90,7 @@ public class DoctorController {
     @GetMapping("/{doctorId}/availability")
     public ResponseEntity<Map<String, List<String>>> getDoctorAvailability(@PathVariable int doctorId) {
         try {
-            Map<String, List<String>> availability = doctorService.getDoctorAvailability(doctorId);
+            Map<String, List<String>> availability = (Map<String, List<String>>) doctorService.getDoctorAvailability(doctorId);
             return ResponseEntity.ok(availability);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

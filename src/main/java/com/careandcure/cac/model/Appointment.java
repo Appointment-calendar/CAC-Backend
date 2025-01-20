@@ -26,7 +26,7 @@ public class Appointment {
   @FutureOrPresent(message = "Appointment date must be in present or future")
   private LocalDate appointmentDate;
   @FutureOrPresent(message = "Appointment time must be in present or future")
-  private LocalTime appointmentTime;
+  private String appointmentTime;
   private String status="Scheduled";
   @Size(min = 10, message = "Reason must be at least 10 characters long")
   private String reason;
