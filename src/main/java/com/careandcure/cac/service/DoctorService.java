@@ -5,7 +5,9 @@ import com.careandcure.cac.repository.DoctorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DoctorService {
@@ -24,6 +26,7 @@ public class DoctorService {
 
     // Fetch a doctor by ID
     public Optional<Doctor> getDoctorById(int doctorId) {
+
         return doctorRepository.findById(doctorId);
     }
 
@@ -79,4 +82,12 @@ public class DoctorService {
     public List<Doctor> getDoctorsBySpecialization(String specialization) {
         return doctorRepository.findBySpecialty(specialization);
     }
+
+    public List<Doctor> findDoctors(String name, String specialization, Integer experience, String gender, String languages) {
+        return doctorRepository.findDoctors(name, specialization, experience, gender, languages);
+    }
+
+//    public List<Doctor> getMostBookedDoctors(LocalDate startDate, LocalDate endDate) {
+//        return doctorRepository.findMostBookedDoctors(startDate, endDate);
+//    }
 }

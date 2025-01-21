@@ -12,7 +12,6 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -139,7 +138,7 @@ public class AppointmentService {
     public Appointment rescheduleAppointment(int appointmentId, LocalDate newDate, LocalTime newTime) throws ResourceNotFoundException, MessagingException {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Appointment with ID " + appointmentId + " not found"));
-        
+
         validateAppointmentDetails(appointment);
 
         boolean isAvailable = isTimeSlotAvailable(appointment.getDoctor().getDoctorId(), newDate, newTime);
@@ -194,5 +193,17 @@ public class AppointmentService {
                 appointment.getDoctor().getName(),
                 appointment.getAppointmentDate().toString(),
                 appointment.getAppointmentTime().toString());
+    }
+
+    public List<Appointment> getAppointmentsByDate(LocalDate appointmentDate) {
+        return null;
+    }
+
+    public List<Patient> getNoShowPatients(LocalDate start, LocalDate end) {
+        return null;
+    }
+
+    public List<Appointment> getDoctorAppointmentsInRange(int doctorId, LocalDate start, LocalDate end) {
+        return null;
     }
 }
