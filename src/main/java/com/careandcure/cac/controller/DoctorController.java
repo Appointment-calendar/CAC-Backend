@@ -1,6 +1,7 @@
 package com.careandcure.cac.controller;
 import com.careandcure.cac.dto.DoctorDTO;
 import com.careandcure.cac.model.Doctor;
+import com.careandcure.cac.model.DoctorTiming;
 import com.careandcure.cac.service.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,30 +21,22 @@ public class DoctorController {
     private DoctorService doctorService;
 
     @GetMapping
-    public ResponseEntity<List<DoctorDTO>> getDoctors() {
-        List<DoctorDTO> doctors = doctorService.findAll().stream()
-            .map(doctor -> new DoctorDTO(doctor.getDoctorId(), doctor.getName()))
-            .collect(Collectors.toList());
+    public ResponseEntity<List<Doctor>> getDoctors() {
+        List<Doctor> doctors = doctorService.findAll();
         return ResponseEntity.ok(doctors);
     }
-
-
-    // Get all doctors
-    // @GetMapping
-    // public ResponseEntity<List<DoctorModel>> getAllDoctors() {
-    //     List<DoctorModel> doctors = doctorService.getAllDoctors();
-    //     return ResponseEntity.ok(doctors);
-    // }
 
     // Get a doctor by ID
     @GetMapping("/{doctorId}")
     public ResponseEntity<Doctor> getDoctorById(@PathVariable int doctorId) {
         Optional<Doctor> doctor = doctorService.getDoctorById(doctorId);
         if (doctor.isPresent()) {
-            return ResponseEntity.ok(doctor.get());
+            Doctor doctorDTO =doctor.get();
+            return ResponseEntity.ok(doctorDTO);
         }
         return ResponseEntity.notFound().build();
     }
+
 
     // Add a new doctor
     @PostMapping
@@ -114,4 +107,21 @@ public class DoctorController {
         List<Doctor> doctors = doctorService.getDoctorsBySpecialization(specialization);
         return ResponseEntity.ok(doctors);
     }
+    @GetMapping("/search-doctors")
+    public ResponseEntity<List<Doctor>> searchDoctors(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String specialization,
+            @RequestParam(required = false) Integer experience,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String languages) {
+
+        List<Doctor> doctors = doctorService.findDoctors(name, specialization, experience, gender, languages);
+        return ResponseEntity.ok(doctors);
+    }
+    @GetMapping("/timings/{id}")
+    public  List<DoctorTiming> doctorTimings(@PathVariable int id){
+        List<DoctorTiming> doctorTimings=doctorService.getDoctorById(id).get().getTimings();
+        return doctorTimings;
+    }
+
 }
