@@ -12,9 +12,9 @@ public class AppointmentDTO {
     private int doctorId;
     private String patientName;
     private String doctorName;
-    @Future(message = "Appointment date must be in future")
+    //@Future(message = "Appointment date must be in future")
     private LocalDate appointmentDate;
-    @Future(message = "Appointment time must be in future")
+    //@Future(message = "Appointment time must be in future")
     private LocalTime appointmentTime;
     private String status;
 

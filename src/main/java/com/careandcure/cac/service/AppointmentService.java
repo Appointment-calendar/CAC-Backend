@@ -112,6 +112,7 @@ public class AppointmentService {
     }
 
     // Cancel an appointment
+   
     public void cancelAppointment(int appointmentId, String reason) throws ResourceNotFoundException, MessagingException {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Appointment with ID " + appointmentId + " not found"));
